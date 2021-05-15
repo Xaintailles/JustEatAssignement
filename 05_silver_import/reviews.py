@@ -39,7 +39,7 @@ with urlopen(url) as r:
                         
             buffer.append(obj)
             
-            if j == 1000: break
+            if j == 10000: break
         
         
 df_buffer = pd.DataFrame(buffer)

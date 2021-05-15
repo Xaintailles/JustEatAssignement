@@ -1,7 +1,7 @@
 USE [AmazonReviewsDWH]
 GO
 
-/****** Object:  StoredProcedure [dbo].[usp_dimTables]    Script Date: 5/15/2021 1:27:57 PM ******/
+/****** Object:  StoredProcedure [dbo].[usp_dimTables]    Script Date: 5/15/2021 4:43:38 PM ******/
 SET ANSI_NULLS ON
 GO
 
@@ -18,6 +18,8 @@ EXEC [dbo].[usp_dimProductCategory];
 EXEC [dbo].[usp_dimProductMetadata];
 
 EXEC [dbo].[usp_dimSalesRank];
+
+EXEC [dbo].[usp_dimProductPrice]
 GO
 
 

@@ -8,6 +8,7 @@ Created on Thu May 13 13:53:46 2021
 
 import gzip, json
 from urllib.request import urlopen
+import numpy as np
 import pandas as pd
 import ast
 import pyodbc
@@ -40,7 +41,7 @@ with urlopen(url) as r:
                         
             buffer.append(obj)
             
-            if j == 50: break
+            if j == 10000: break
         
 df_buffer = pd.DataFrame(buffer)
         
@@ -62,6 +63,8 @@ df_category = df_category.explode('categories')
 
 df_category['category_item_rank'] = df_category.groupby(['asin','category_list_rank']).cumcount() + 1
 
+df_category = df_category.where(pd.notnull(df_category), None)
+
 # %% salesRank transformation
 
 df_salesrank = df_buffer[['asin','salesRank']]
@@ -71,6 +74,8 @@ df_salesrank = df_buffer[['asin','salesRank']]
 df_salesrank = pd.concat([df_salesrank.drop(['salesRank'], axis=1), df_salesrank['salesRank'].apply(pd.Series)], axis=1)
 
 df_salesrank = df_salesrank.melt(id_vars=['asin'], var_name='category', value_name='sales_rank').dropna()
+
+df_salesrank = df_salesrank.where(pd.notnull(df_salesrank), None)
 
 # %% related transformation
 
@@ -84,11 +89,15 @@ df_related = df_related.melt(id_vars=['asin'], var_name='related_type', value_na
 
 df_related = df_related.explode('related')
 
+df_related = df_related.where(pd.notnull(df_related), None)
+
 # %% metadata
 
 df_metadata = df_buffer.drop(['salesRank','categories','related'], axis = 1)
 
 # None is equivalent to NULL in sql, necessary to insert in float columns
+
+df_metadata['description'] = df_metadata['description'].str.slice(0,3999)
 
 df_metadata = df_metadata.where(pd.notnull(df_metadata), None)
 
@@ -124,6 +133,8 @@ for index, row in df_category.iterrows():
                    , row.category_item_rank
                    )
         
+cnxn.commit()
+        
 for index, row in df_salesrank.iterrows():
     cursor.execute("""INSERT INTO stagingAmazonReviews.staging.salesrank\
                    ([asin]\
@@ -135,7 +146,7 @@ for index, row in df_salesrank.iterrows():
                    , row.sales_rank
                    )
         
-
+cnxn.commit()
         
 for index, row in df_related.iterrows():
     cursor.execute("""INSERT INTO stagingAmazonReviews.staging.related\
@@ -148,9 +159,10 @@ for index, row in df_related.iterrows():
                    , row.related
                    )
         
-
+cnxn.commit()
         
 for index, row in df_metadata.iterrows():
+    cursor.fast_executemany = True
     cursor.execute("""INSERT INTO stagingAmazonReviews.staging.metadata\
                    ([asin]\
                    ,[imUrl]\
@@ -170,12 +182,6 @@ for index, row in df_metadata.iterrows():
 cnxn.commit()
 
 cursor.close()
-
-
-
-
-
-
 
 
 

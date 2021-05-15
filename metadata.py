@@ -4,13 +4,20 @@ Created on Thu May 13 13:53:46 2021
 
 @author: Gebruiker
 """
+# %% library imports
 
 import gzip, json
 from urllib.request import urlopen
 import pandas as pd
 import ast
+import pyodbc
 
+# %% define constants
 url = 'https://s3-eu-west-1.amazonaws.com/bigdata-team/job-interview/metadata.json.gz'
+server = 'DESKTOP-CP47TBL' 
+database = 'stagingAmazonReviews'
+ 
+# %% pull
 
 #extra steps because file comes with ' instead of " in the json file, so some intermediate transformations are needed
 
@@ -34,16 +41,174 @@ with urlopen(url) as r:
             
             if j == 50: break
         
-        
 df_buffer = pd.DataFrame(buffer)
+        
+# %% category transformation
+ 
+df_category = df_buffer[['asin','categories']]
 
-test = df_buffer[['asin','categories']]
+# We have a list of categories and sub_categories nested in a list of list
+# We first get the lists out and number them, to find back the first one if need be
 
-print(type(test['categories'][0]))
+df_category = df_category.explode('categories')
 
-test = test.explode('categories')
-test['Rank'] = test.groupby("asin").cumcount() + 1
+df_category['category_list_rank'] = df_category.groupby("asin").cumcount() + 1
 
-test = test.explode('categories')
+# Once we have that, we explode the lists and number the items again so that we can find the root each time
+# The main item would then be where list_rank = 1 and item_rank = 1
 
-# Insert Dataframe into SQL Server:
+df_category = df_category.explode('categories')
+
+df_category['category_item_rank'] = df_category.groupby(['asin','category_list_rank']).cumcount() + 1
+
+# %% salesRank transformation
+
+df_salesrank = df_buffer[['asin','salesRank']]
+
+# We get the values out of the dictionnary, then melt the df to have a normalized table to export
+
+df_salesrank = pd.concat([df_salesrank.drop(['salesRank'], axis=1), df_salesrank['salesRank'].apply(pd.Series)], axis=1)
+
+df_salesrank = df_salesrank.melt(id_vars=['asin'], var_name='category', value_name='sales_rank').dropna()
+
+# %% related transformation
+
+df_related = df_buffer[['asin','related']]
+
+# We get the values out of the dictionnary, then melt the df to have a normalized table to export
+
+df_related = pd.concat([df_related.drop(['related'], axis=1), df_related['related'].apply(pd.Series)], axis=1)
+
+df_related = df_related.melt(id_vars=['asin'], var_name='related_type', value_name='related').dropna()
+
+df_related = df_related.explode('related')
+
+# %% metadata
+
+df_metadata = df_buffer.drop(['salesRank','categories','related'], axis = 1)
+
+# None is equivalent to NULL in sql, necessary to insert in float columns
+
+df_metadata = df_metadata.where(pd.notnull(df_metadata), None)
+
+# %% Insert Dataframe into SQL Server:
+
+cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';Trusted_Connection=yes;')
+
+cursor = cnxn.cursor()
+
+# first we clear the tables
+
+cursor.execute("""
+               TRUNCATE TABLE [stagingAmazonReviews].[staging].[category];
+               TRUNCATE TABLE [stagingAmazonReviews].[staging].[salesrank];
+               TRUNCATE TABLE [stagingAmazonReviews].[staging].[related];
+               TRUNCATE TABLE [stagingAmazonReviews].[staging].[metadata];
+               """)
+ 
+cnxn.commit()    
+
+# then we run the inserts from the df we transformed earlier
+
+for index, row in df_category.iterrows():
+    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.category\
+                   ([asin]\
+                   ,[categories]\
+                   ,[category_list_rank]\
+                   ,[category_item_rank])\
+                   values(?,?,?,?)"""
+                   , row.asin
+                   , row.categories
+                   , row.category_list_rank
+                   , row.category_item_rank
+                   )
+        
+for index, row in df_salesrank.iterrows():
+    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.salesrank\
+                   ([asin]\
+                   ,[category]\
+                   ,[sales_rank])\
+                   values(?,?,?)"""
+                   , row.asin
+                   , row.category
+                   , row.sales_rank
+                   )
+        
+
+        
+for index, row in df_related.iterrows():
+    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.related\
+                   ([asin]\
+                   ,[related_type]\
+                   ,[related])\
+                   values(?,?,?)"""
+                   , row.asin
+                   , row.related_type
+                   , row.related
+                   )
+        
+
+        
+for index, row in df_metadata.iterrows():
+    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.metadata\
+                   ([asin]\
+                   ,[imUrl]\
+                   ,[title]\
+                   ,[description]\
+                   ,[price]\
+                   ,[brand])\
+                   values(?,?,?,?,?,?)"""
+                   , row.asin
+                   , row.imUrl
+                   , row.title
+                   , row.description
+                   , row.price
+                   , row.brand
+                   )
+
+cnxn.commit()
+
+cursor.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

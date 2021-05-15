@@ -17,8 +17,6 @@ server = 'DESKTOP-CP47TBL'
 database = 'stagingAmazonReviews'
 url = 'https://s3-eu-west-1.amazonaws.com/bigdata-team/job-interview/item_dedup.json.gz'
 
-
-
 cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';Trusted_Connection=yes;')
 
 buffer = []

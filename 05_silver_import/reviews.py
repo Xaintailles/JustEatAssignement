@@ -62,26 +62,36 @@ cursor.execute("""
 cnxn.commit()  
 
 # then we run the inserts from the df we transformed earlier
- 
-for index, row in df_buffer.iterrows():
-    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.reviews
-                   (reviewerID
-                    ,asin
-                    ,reviewerName
-                    ,helpful
-                    ,overall
-                    ,summary
-                    ,unixReviewTime
-                    ,reviewTime)
-                   values(?,?,?,?,?,?,?,?)"""
-                   ,row.reviewerID
-                   ,row.asin
-                   ,row.reviewerName
-                   ,row.helpful
-                   ,row.overall
-                   ,row.summary
-                   ,row.unixReviewTime
-                   ,row.reviewTime)
-cnxn.commit()
+try:
+    for index, row in df_buffer.iterrows():
+        cursor.execute("""INSERT INTO stagingAmazonReviews.staging.reviews
+                       (reviewerID
+                        ,asin
+                        ,reviewerName
+                        ,helpful
+                        ,overall
+                        ,summary
+                        ,unixReviewTime
+                        ,reviewTime)
+                       values(?,?,?,?,?,?,?,?)"""
+                       ,row.reviewerID
+                       ,row.asin
+                       ,row.reviewerName
+                       ,row.helpful
+                       ,row.overall
+                       ,row.summary
+                       ,row.unixReviewTime
+                       ,row.reviewTime)
+    cnxn.commit()
+except Exception as Arg:
+    cursor.execute("""INSERT INTO [logs].[dbo].[silver_import_log]\
+               ([timestamp]\
+               ,[process]\
+               ,[error])\
+               values(GETDATE(),'silver_layer_reviews.py',?)"""
+               , str(Arg)
+               )
+    cnxn.commit()
 
+    
 cursor.close()

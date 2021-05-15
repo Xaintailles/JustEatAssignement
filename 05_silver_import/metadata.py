@@ -120,66 +120,105 @@ cnxn.commit()
 
 # then we run the inserts from the df we transformed earlier
 
-for index, row in df_category.iterrows():
-    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.category\
-                   ([asin]\
-                   ,[categories]\
-                   ,[category_list_rank]\
-                   ,[category_item_rank])\
-                   values(?,?,?,?)"""
-                   , row.asin
-                   , row.categories
-                   , row.category_list_rank
-                   , row.category_item_rank
-                   )
-        
-cnxn.commit()
-        
-for index, row in df_salesrank.iterrows():
-    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.salesrank\
-                   ([asin]\
-                   ,[category]\
-                   ,[sales_rank])\
-                   values(?,?,?)"""
-                   , row.asin
-                   , row.category
-                   , row.sales_rank
-                   )
-        
-cnxn.commit()
-        
-for index, row in df_related.iterrows():
-    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.related\
-                   ([asin]\
-                   ,[related_type]\
-                   ,[related])\
-                   values(?,?,?)"""
-                   , row.asin
-                   , row.related_type
-                   , row.related
-                   )
-        
-cnxn.commit()
-        
-for index, row in df_metadata.iterrows():
-    cursor.fast_executemany = True
-    cursor.execute("""INSERT INTO stagingAmazonReviews.staging.metadata\
-                   ([asin]\
-                   ,[imUrl]\
-                   ,[title]\
-                   ,[description]\
-                   ,[price]\
-                   ,[brand])\
-                   values(?,?,?,?,?,?)"""
-                   , row.asin
-                   , row.imUrl
-                   , row.title
-                   , row.description
-                   , row.price
-                   , row.brand
-                   )
+try:
+    for index, row in df_category.iterrows():
+        cursor.execute("""INSERT INTO stagingAmazonReviews.staging.category\
+                       ([asin]\
+                       ,[categories]\
+                       ,[category_list_rank]\
+                       ,[category_item_rank])\
+                       values(?,?,?,?)"""
+                       , row.asin
+                       , row.categories
+                       , row.category_list_rank
+                       , row.category_item_rank
+                       )        
+    cnxn.commit()
+except Exception as Arg:
+    cursor.execute("""INSERT INTO [logs].[dbo].[silver_import_log]\
+               ([timestamp]\
+               ,[process]\
+               ,[error])\
+               values(GETDATE(),'silver_layer_metadata_category.py',?)"""
+               , str(Arg)
+               )
+    cnxn.commit()
+    
+try:    
+    for index, row in df_salesrank.iterrows():
+        cursor.execute("""INSERT INTO stagingAmazonReviews.staging.salesrank\
+                       ([asin]\
+                       ,[category]\
+                       ,[sales_rank])\
+                       values(?,?,?)"""
+                       , row.asin
+                       , row.category
+                       , row.sales_rank
+                       )
+            
+    cnxn.commit()
+except Exception as Arg:
+    cursor.execute("""INSERT INTO [logs].[dbo].[silver_import_log]\
+               ([timestamp]\
+               ,[process]\
+               ,[error])\
+               values(GETDATE(),'silver_layer_metadata_salesrank.py',?)"""
+               , str(Arg)
+               )
+    cnxn.commit()
 
-cnxn.commit()
+try:     
+    for index, row in df_related.iterrows():
+        cursor.execute("""INSERT INTO stagingAmazonReviews.staging.related\
+                       ([asin]\
+                       ,[related_type]\
+                       ,[related])\
+                       values(?,?,?)"""
+                       , row.asin
+                       , row.related_type
+                       , row.related
+                       )
+            
+    cnxn.commit()
+except Exception as Arg:
+    cursor.execute("""INSERT INTO [logs].[dbo].[silver_import_log]\
+               ([timestamp]\
+               ,[process]\
+               ,[error])\
+               values(GETDATE(),'silver_layer_metadata_related.py',?)"""
+               , str(Arg)
+               )
+    cnxn.commit()
+
+try:     
+    for index, row in df_metadata.iterrows():
+        cursor.fast_executemany = True
+        cursor.execute("""INSERT INTO stagingAmazonReviews.staging.metadata\
+                       ([asin]\
+                       ,[imUrl]\
+                       ,[title]\
+                       ,[description]\
+                       ,[price]\
+                       ,[brand])\
+                       values(?,?,?,?,?,?)"""
+                       , row.asin
+                       , row.imUrl
+                       , row.title
+                       , row.description
+                       , row.price
+                       , row.brand
+                       )
+    
+    cnxn.commit()
+except Exception as Arg:
+    cursor.execute("""INSERT INTO [logs].[dbo].[silver_import_log]\
+               ([timestamp]\
+               ,[process]\
+               ,[error])\
+               values(GETDATE(),'silver_layer_metadata_metadata.py',?)"""
+               , str(Arg)
+               )
+    cnxn.commit()
 
 cursor.close()
 

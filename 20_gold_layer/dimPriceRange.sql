@@ -1,7 +1,7 @@
 USE [AmazonReviewsDWH]
 GO
 
-/****** Object:  StoredProcedure [dbo].[usp_dimPriceRange]    Script Date: 5/15/2021 1:24:27 PM ******/
+/****** Object:  StoredProcedure [dbo].[usp_dimPriceRange]    Script Date: 5/15/2021 5:25:34 PM ******/
 SET ANSI_NULLS ON
 GO
 
@@ -16,7 +16,7 @@ AS
 
 DROP TABLE IF EXISTS dimPriceRange;
 
-DECLARE @power INT = 4;
+DECLARE @power INT = 10;
 DECLARE @startnum INT = 0
 DECLARE @endnum INT = 8
 ;

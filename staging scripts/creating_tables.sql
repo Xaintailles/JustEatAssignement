@@ -21,7 +21,7 @@ CREATE TABLE [dbo].[metadata](
 	[imUrl] [nvarchar](4000) NULL,
 	[title] [nvarchar](4000) NULL,
 	[description] [nvarchar](4000) NULL,
-	[price] [decimal](9, 0) NULL,
+	[price] [float] NULL,
 	[brand] [nvarchar](4000) NULL
 );
 
@@ -30,7 +30,7 @@ CREATE TABLE [staging].[metadata](
 	[imUrl] [nvarchar](4000) NULL,
 	[title] [nvarchar](4000) NULL,
 	[description] [nvarchar](4000) NULL,
-	[price] [decimal](9, 0) NULL,
+	[price] [float](9, 0) NULL,
 	[brand] [nvarchar](4000) NULL
 );
 

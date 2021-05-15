@@ -1,12 +1,13 @@
 USE [stagingAmazonReviews]
 GO
 
-/****** Object:  StoredProcedure [dbo].[usp_merge_reviews]    Script Date: 5/15/2021 11:55:09 AM ******/
+/****** Object:  StoredProcedure [dbo].[usp_merge_reviews]    Script Date: 5/15/2021 2:14:49 PM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 CREATE PROCEDURE [dbo].[usp_merge_reviews]
@@ -20,7 +21,6 @@ SET T.[reviewerID] = S.[reviewerID],
 	T.[asin] = S.[asin],
 	T.[reviewerName] = S.[reviewerName],
 	T.[helpful] = S.[helpful],
-	T.[reviewText] = S.[reviewText],
 	T.[overall] = S.[overall],
 	T.[summary] = S.[summary],
 	T.[unixReviewTime] = S.[unixReviewTime],
@@ -30,7 +30,6 @@ THEN INSERT ([reviewerID]
       ,[asin]
       ,[reviewerName]
       ,[helpful]
-      ,[reviewText]
       ,[overall]
       ,[summary]
       ,[unixReviewTime]
@@ -40,7 +39,6 @@ VALUES (S.[reviewerID]
       ,S.[asin]
       ,S.[reviewerName]
       ,S.[helpful]
-      ,S.[reviewText]
       ,S.[overall]
       ,S.[summary]
       ,S.[unixReviewTime]

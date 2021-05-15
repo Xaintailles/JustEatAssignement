@@ -39,7 +39,7 @@ with urlopen(url) as r:
                         
             buffer.append(obj)
             
-            if j == 50: break
+            if j == 1000: break
         
         
 df_buffer = pd.DataFrame(buffer)
@@ -69,17 +69,15 @@ for index, row in df_buffer.iterrows():
                     ,asin
                     ,reviewerName
                     ,helpful
-                    ,reviewText
                     ,overall
                     ,summary
                     ,unixReviewTime
                     ,reviewTime)
-                   values(?,?,?,?,?,?,?,?,?)"""
+                   values(?,?,?,?,?,?,?,?)"""
                    ,row.reviewerID
                    ,row.asin
                    ,row.reviewerName
                    ,row.helpful
-                   ,row.reviewText
                    ,row.overall
                    ,row.summary
                    ,row.unixReviewTime

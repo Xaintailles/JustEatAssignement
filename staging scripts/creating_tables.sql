@@ -47,11 +47,10 @@ CREATE TABLE [staging].[related](
 );
 
 CREATE TABLE [dbo].[reviews](
-	[reviewerID] [nvarchar](14) NULL,
+	[reviewerID] VARCHAR(50) NULL,
 	[asin] [nvarchar](40) NULL,
 	[reviewerName] [nvarchar](4000) NULL,
 	[helpful] [nvarchar](20) NULL,
-	[reviewText] [nvarchar](max) NULL,
 	[overall] [int] NULL,
 	[summary] [nvarchar](4000) NULL,
 	[unixReviewTime] [bigint] NULL,
@@ -59,11 +58,10 @@ CREATE TABLE [dbo].[reviews](
 );
 
 CREATE TABLE [staging].[reviews](
-	[reviewerID] [nvarchar](14) NULL,
+	[reviewerID] VARCHAR(50) NULL,
 	[asin] [nvarchar](40) NULL,
 	[reviewerName] [nvarchar](4000) NULL,
 	[helpful] [nvarchar](20) NULL,
-	[reviewText] [nvarchar](max) NULL,
 	[overall] [int] NULL,
 	[summary] [nvarchar](4000) NULL,
 	[unixReviewTime] [bigint] NULL,

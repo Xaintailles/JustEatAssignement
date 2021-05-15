@@ -13,6 +13,7 @@ import ast
 import pyodbc
 
 # %% define constants
+
 url = 'https://s3-eu-west-1.amazonaws.com/bigdata-team/job-interview/metadata.json.gz'
 server = 'DESKTOP-CP47TBL' 
 database = 'stagingAmazonReviews'
